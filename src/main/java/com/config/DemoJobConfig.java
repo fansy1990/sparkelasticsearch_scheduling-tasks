@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 public class DemoJobConfig {
-    @Value("demo.job.cron")
+    @Value("${demo.job.cron}")
     private String cron;
 
     public String getCron() {

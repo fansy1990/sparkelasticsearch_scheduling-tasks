@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="syes">
+    <output-path>$PROJECT_DIR$/out/artifacts/syes</output-path>
+    <root id="archive" name="syes.jar">
+      <element id="module-output" name="sparkelasticsearch_scheduling-tasks" />
+    </root>
+  </artifact>
+</component>

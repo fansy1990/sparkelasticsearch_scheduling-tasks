@@ -1,12 +1,10 @@
 package org.apache.spark.deploy.rest;
 
 import org.apache.spark.SparkConf;
-import org.apache.spark.deploy.rest.RestSubmissionClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.Predef;
-import scala.Tuple2;
-import scala.collection.JavaConverters;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -17,26 +15,15 @@ import java.util.Map;
  * 2）根据id监控Spark 任务；
  * Created by fansy on 2017/11/16.
  */
-public class SparkEngine {
-    private static final Logger log = LoggerFactory.getLogger(SparkEngine.class);
+@Component
+public class SparkEngine2 {
+    private static final Logger log = LoggerFactory.getLogger(SparkEngine2.class);
 
 //    private static final String MASTER="spark://server2.tipdm.com:6066";
 //    private static final String APPNAME="wordcount 2";
 
-    public static String submit(String master,String appResource,String mainClass,String ...args){
-        SparkConf sparkConf = new SparkConf();
-        sparkConf.setMaster(master);
-        sparkConf.setAppName("spark engine "+ System.currentTimeMillis());
-        sparkConf.set("spark.executor.cores","2");
-        sparkConf.set("spark.submit.deployMode","cluster");
-        sparkConf.set("spark.jars",appResource);
-        sparkConf.set("spark.executor.memory","2G");
-        sparkConf.set("spark.cores.max","2");
-        sparkConf.set("spark.driver.supervise","false");
-
-
+    public  String submit(SparkConf sparkConf,String appResource,String mainClass,String ...args){
         Map<String,String> env = filterSystemEnvironment(System.getenv());
-
         CreateSubmissionResponse response = null;
         try {
             response = (CreateSubmissionResponse)
@@ -45,15 +32,12 @@ public class SparkEngine {
             e.printStackTrace();
             return null;
         }
-
         return response.submissionId();
     }
 
     private static RestSubmissionClient client = null;
-    public static void monitory(String master ,String appId){
-        if(client == null){
-            client = new RestSubmissionClient(master);
-        }
+    public  void monitory(RestSubmissionClient client ,String appId,Long time){
+
         SubmissionStatusResponse response = null;
         boolean finished =false;
         int i =0;
@@ -61,10 +45,12 @@ public class SparkEngine {
             try {
                 response = (SubmissionStatusResponse) client.requestSubmissionStatus(appId, true);
                 log.info("i:{}\t DriverState :{}",i++,response.driverState());
-                if("FINISHED" .equals(response.driverState()) || "ERROR".equals(response.driverState())){
+                if("FINISHED" .equals(response.driverState()) || "ERROR".equals(response.driverState())
+                        || "FAILED".equals(response.driverState())){
                     finished = true;
+                    log.warn("appId:{}, final state:",new Object[]{appId,response.driverState()});
                 }
-                Thread.sleep(5000);
+                Thread.sleep(time);
             } catch (Exception e) {
                 e.printStackTrace();
             }
